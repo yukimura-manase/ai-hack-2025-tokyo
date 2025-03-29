@@ -16,6 +16,7 @@ export const StoryPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const misakiAvatar = "/icons/make-hiroin-icon.png";
@@ -35,37 +36,82 @@ export const StoryPage = () => {
    * AIの応答を音声で再生する
    */
   const playAIResponse = async (text: string) => {
+    if (isMuted) return;
+
     try {
-      console.log("text", text);
+      console.log("音声生成開始:", text);
+      setIsPlaying(true);
+      setAudioError(null);
+
+      // 既存の音声を停止
+      if (audioRef.current) {
+        audioRef.current.pause();
+        URL.revokeObjectURL(audioRef.current.src);
+      }
 
       // 音声を合成して、Blob を取得する。
       const audioBlob = await VoiceVoxApi.synthesizeSpeech(text);
-      console.log("audioBlob", audioBlob);
+      if (!audioBlob) {
+        throw new Error("音声生成に失敗しました");
+      }
+
+      console.log("音声生成完了", audioBlob);
+
       // Blob を URL に変換する。
       const audioUrl = URL.createObjectURL(audioBlob);
-      // 音声インスタンス & 再生する。
-      const audio = new Audio(audioUrl);
-      await audio.play();
 
-      // 再生が終わったらURLを解放
-      audio.onended = () => {
+      // audioRefに設定して再生
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
+
+      audioRef.current.src = audioUrl;
+      audioRef.current.onended = () => {
+        setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
+
+      audioRef.current.onerror = (e) => {
+        console.error("音声再生エラー:", e);
+        setAudioError("音声の再生中にエラーが発生しました");
+        setIsPlaying(false);
+      };
+
+      // 音声再生開始
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("音声再生が拒否されました:", error);
+          setAudioError("音声の再生が拒否されました");
+          setIsPlaying(false);
+        });
+      }
     } catch (error) {
-      console.error("Error playing AI response:", error);
+      console.error("音声生成エラー:", error);
+      setAudioError("音声の生成中にエラーが発生しました");
+      setIsPlaying(false);
     }
   };
 
   // 音声再生をトグルする関数
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    if (!isMuted && audioRef.current && !audioRef.current.paused) {
+    if (!isMuted && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
+    } else if (isMuted && !isTyping && dialogues[currentDialogueIndex]) {
+      // ミュート解除時に現在のダイアログを再生
+      playAIResponse(dialogues[currentDialogueIndex].text);
     }
   };
 
   const handleNext = async () => {
+    // 現在再生中の音声を停止
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+
     if (currentDialogueIndex < dialogues.length - 1) {
       setIsTyping(true);
       setCurrentDialogueIndex((prev) => prev + 1);
@@ -137,6 +183,12 @@ export const StoryPage = () => {
   };
 
   const handlePrevious = () => {
+    // 現在再生中の音声を停止
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+
     if (currentDialogueIndex > 0) {
       setIsTyping(true);
       setCurrentDialogueIndex((prev) => prev - 1);
@@ -147,24 +199,24 @@ export const StoryPage = () => {
     setIsTyping(true);
     const timer = setTimeout(() => {
       setIsTyping(false);
-      // タイピング効果が終わったら音声を再生
-      if (!isTyping) {
-        console.log(
-          "dialogues[currentDialogueIndex].text",
-          dialogues[currentDialogueIndex].text
-        );
+
+      // タイピング効果が終わったら音声を再生（ミュートされていない場合）
+      if (dialogues[currentDialogueIndex] && !isMuted) {
         playAIResponse(dialogues[currentDialogueIndex].text);
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [currentDialogueIndex]);
+  }, [currentDialogueIndex, isMuted]);
 
   // コンポーネントがアンマウントされたときにオーディオリソースをクリーンアップ
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        if (audioRef.current.src) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
         audioRef.current = null;
       }
     };
@@ -175,14 +227,19 @@ export const StoryPage = () => {
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden position absolute top-0 ">
         <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white flex justify-between items-center">
           <h1 className="text-xl font-bold">2人の会話</h1>
-          <Button
-            onClick={toggleMute}
-            variant="ghost"
-            className="text-white hover:bg-white/20"
-            size="sm"
-          >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </Button>
+          <div className="flex items-center gap-2">
+            {isPlaying && !isMuted && (
+              <span className="text-xs animate-pulse">🔊 再生中...</span>
+            )}
+            <Button
+              onClick={toggleMute}
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              size="sm"
+            >
+              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </Button>
+          </div>
         </div>
 
         <div className="p-6 min-h-[230px] flex flex-col justify-between">
@@ -191,18 +248,23 @@ export const StoryPage = () => {
               <Loading />
             </div>
           ) : (
-            <CharacterDialogue
-              character={dialogues[currentDialogueIndex].character}
-              avatar={dialogues[currentDialogueIndex].avatar}
-              text={dialogues[currentDialogueIndex].text}
-              isTyping={isTyping}
-            />
+            <>
+              <CharacterDialogue
+                character={dialogues[currentDialogueIndex].character}
+                avatar={dialogues[currentDialogueIndex].avatar}
+                text={dialogues[currentDialogueIndex].text}
+                isTyping={isTyping}
+              />
+              {audioError && (
+                <div className="text-red-500 text-sm mt-2">{audioError}</div>
+              )}
+            </>
           )}
 
           <div className="flex justify-between mt-8">
             <Button
               onClick={handlePrevious}
-              disabled={currentDialogueIndex === 0 || isLoading}
+              disabled={currentDialogueIndex === 0 || isLoading || isTyping}
               variant="outline"
             >
               前へ
@@ -215,7 +277,8 @@ export const StoryPage = () => {
               disabled={
                 (currentDialogueIndex === dialogues.length - 1 &&
                   dialogues.length >= lastJudgmentCounter) ||
-                isLoading
+                isLoading ||
+                isTyping
               }
             >
               次へ

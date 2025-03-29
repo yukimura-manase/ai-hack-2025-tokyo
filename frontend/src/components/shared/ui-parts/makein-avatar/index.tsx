@@ -31,6 +31,7 @@ interface AvatarChatResponse {
   text: string;
   emotion: AvatarEmotion;
   timestamp: Date;
+  threadId?: string;
 }
 
 interface MakeinAvatarProps {
@@ -52,6 +53,7 @@ export const MakeinAvatar = ({ url }: MakeinAvatarProps) => {
   const [currentEmotion, setCurrentEmotion] =
     useState<AvatarEmotion>("neutral");
   const [isLoading, setIsLoading] = useState(false);
+  const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:3777";
@@ -102,8 +104,21 @@ export const MakeinAvatar = ({ url }: MakeinAvatarProps) => {
       // APIを使用してAI応答と感情分析を取得
       const response = await axios.post<AvatarChatResponse>(
         `${serverUrl}/api/messages/avatar/chat`,
-        { content: inputMessage }
+        {
+          content: inputMessage,
+          threadId: threadId,
+        },
+        {
+          headers: {
+            "X-User-Id": user?.userId || "anonymous",
+          },
+        }
       );
+
+      // スレッドIDが返された場合は保存
+      if (response.data.threadId) {
+        setThreadId(response.data.threadId);
+      }
 
       // APIからのレスポンスを使用してアバターの感情を設定
       const avatarEmotion = response.data.emotion;

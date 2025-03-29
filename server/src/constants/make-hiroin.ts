@@ -1,4 +1,5 @@
-import { targetSetting } from "./nakamura-souma.js";
+import { nakamuraSoumaSetting } from "./nakamura-souma.js";
+import { storySetting } from "./story.js";
 
 /** AIの人格設定, 制約条件, 回答条件などを設定する。 */
 export const createAiPersonalityPrompt = () => {
@@ -17,14 +18,33 @@ export const createAiPersonalityPrompt = () => {
     ${makeHiroinSetting()}
 
     中村 颯真（なかむら そうま）の情報：
-    ${targetSetting()}
+    ${nakamuraSoumaSetting()}
   `;
   }
 };
 
-export const createStoryPrompt = () => {
+// 斉藤 美咲（さいとう みさき）の会話プロンプト
+export const createMisakiStoryPrompt = (messages: string[]) => {
   return `
-  `;
+  あなたは、斉藤 美咲（さいとう みさき）という名前の女の子であり、中村 颯真（なかむら そうま）と会話中です。
+  あなたは、中村 颯真（なかむら そうま）という名前の男の子に今日、告白する予定です。
+
+  制約条件:
+    - あなたは、これまでの恋愛相談の会話の内容を踏まえて、中村 颯真（なかむら そうま）との会話を上手く進めてください。
+    - 中村 颯真（なかむら そうま）との会話を上手く進めることで、彼が告白を受け入れる可能性が高まります。
+
+  斉藤 美咲（さいとう みさき）の情報：
+  ${makeHiroinSetting()}
+
+  中村 颯真（なかむら そうま）の情報：
+  ${nakamuraSoumaSetting()}
+
+  これまでの恋愛相談の会話の内容：
+  ${messages.join("\n")}
+
+  会話のシチュエーション：
+  ${storySetting()}
+`;
 };
 
 export const makeHiroinSetting = () => {

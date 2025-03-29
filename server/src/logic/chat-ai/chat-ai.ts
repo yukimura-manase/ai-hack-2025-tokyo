@@ -1,7 +1,11 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { createAiPersonalityPrompt } from "../../constants/make-hiroin.js";
+import {
+  createAiPersonalityPrompt,
+  createMisakiStoryPrompt,
+} from "../../constants/make-hiroin.js";
+import { createSoumaStoryPrompt } from "@/constants/nakamura-souma.js";
 
 export class ChatAiLogic {
   private constructor() {}
@@ -14,6 +18,82 @@ export class ChatAiLogic {
   public static async generateAIResponse(content: string): Promise<string> {
     try {
       const systemPrompt: string = createAiPersonalityPrompt();
+
+      const promptTemplate: ChatPromptTemplate<any, any> =
+        this.createPromptTemplate(systemPrompt);
+
+      /** Geminiのモデルを作成する。 */
+      const geminiModel: ChatGoogleGenerativeAI = new ChatGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        modelName: process.env.GEMINI_MODEL_NAME,
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      });
+
+      /** 出力パーサーを作成する。 */
+      const outputParser = new StringOutputParser();
+
+      /** チェーンを作成する。 */
+      const llmChain = promptTemplate.pipe(geminiModel).pipe(outputParser);
+
+      const aiAnswer: string = await llmChain.invoke({
+        input: content,
+      });
+      return aiAnswer;
+    } catch (error) {
+      console.error("AI応答の生成に失敗しました:", error);
+      return "申し訳ありません、応答を生成できません";
+    }
+  }
+
+  /**
+   * 斉藤 美咲（さいとう みさき）のAI応答を生成する
+   * @param content ユーザーメッセージの内容
+   * @returns AI応答テキスト
+   */
+  public static async generateMisakiResponse(
+    content: string[]
+  ): Promise<string> {
+    try {
+      const systemPrompt: string = createMisakiStoryPrompt(content);
+
+      const promptTemplate: ChatPromptTemplate<any, any> =
+        this.createPromptTemplate(systemPrompt);
+
+      /** Geminiのモデルを作成する。 */
+      const geminiModel: ChatGoogleGenerativeAI = new ChatGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        modelName: process.env.GEMINI_MODEL_NAME,
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      });
+
+      /** 出力パーサーを作成する。 */
+      const outputParser = new StringOutputParser();
+
+      /** チェーンを作成する。 */
+      const llmChain = promptTemplate.pipe(geminiModel).pipe(outputParser);
+
+      const aiAnswer: string = await llmChain.invoke({
+        input: content,
+      });
+      return aiAnswer;
+    } catch (error) {
+      console.error("AI応答の生成に失敗しました:", error);
+      return "申し訳ありません、応答を生成できません";
+    }
+  }
+
+  /**
+   * 中村 颯真（なかむら そうま）のAI応答を生成する
+   * @param content ユーザーメッセージの内容
+   * @returns AI応答テキスト
+   */
+  public static async generateSoumaResponse(
+    content: string[]
+  ): Promise<string> {
+    try {
+      const systemPrompt: string = createSoumaStoryPrompt(content);
 
       const promptTemplate: ChatPromptTemplate<any, any> =
         this.createPromptTemplate(systemPrompt);

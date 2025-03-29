@@ -1,0 +1,8 @@
+services:
+  ollama:
+    image: ollama/ollama:0.6.2
+    volumes:
+      - ./ollama:/root/.ollama
+      - ./custom_model/:/tmp
+    ports:
+      - "11434:11434"

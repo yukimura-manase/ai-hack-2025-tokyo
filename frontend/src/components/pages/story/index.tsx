@@ -8,7 +8,7 @@ import { VoiceVoxApi } from "@/apis/voiceVoxApi";
 import { Volume2, VolumeX } from "lucide-react";
 
 // 斉藤 美咲（さいとう みさき）が告白を実行するタイミング
-const lastJudgmentCounter = 5;
+const loveAttackCounter = 5;
 
 export const StoryPage = () => {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
@@ -133,11 +133,11 @@ export const StoryPage = () => {
           : `${SERVER_URL}/api/messages/avatar/make-hiroin`; // 中村 颯真の後は斉藤 美咲
 
         // 会話リストが5回目の場合は、告白メッセージを生成する
-        if (dialogues.length === lastJudgmentCounter) {
+        if (dialogues.length + 1 === loveAttackCounter) {
           endpoint = `${SERVER_URL}/api/messages/avatar/make-hiroin/love-attack`;
         }
 
-        if (dialogues.length === lastJudgmentCounter + 1) {
+        if (dialogues.length + 1 === loveAttackCounter + 1) {
           endpoint = `${SERVER_URL}/api/messages/avatar/make-sakuma/last-judgment`;
         }
 
@@ -278,7 +278,7 @@ export const StoryPage = () => {
               onClick={handleNext}
               disabled={
                 (currentDialogueIndex === dialogues.length - 1 &&
-                  dialogues.length >= lastJudgmentCounter) ||
+                  dialogues.length >= loveAttackCounter + 1) ||
                 isLoading ||
                 isTyping
               }

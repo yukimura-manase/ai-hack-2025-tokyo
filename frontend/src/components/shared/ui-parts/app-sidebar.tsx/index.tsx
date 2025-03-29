@@ -15,20 +15,15 @@ import { RiRobot2Line } from "react-icons/ri";
 // Sidebar Menu items.
 const items = [
   {
-    title: "Home",
+    title: "負けインとの会話",
     url: "/",
     icon: Home,
   },
   {
-    title: "AIエージェントとの会話",
-    url: "/talk-room",
+    title: "ストーリー",
+    url: "/story",
     icon: RiRobot2Line,
   },
-  // {
-  //   title: "マイページ",
-  //   url: "/my-page",
-  //   icon: ImProfile,
-  // },
 ];
 
 export const AppSidebar = () => {

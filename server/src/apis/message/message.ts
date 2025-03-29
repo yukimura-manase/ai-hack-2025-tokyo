@@ -5,6 +5,8 @@ import {
 } from "../../services/message.js";
 import { ChatAiLogic } from "../../logic/chat-ai/chat-ai.js";
 import { createThread } from "../../services/thread.js";
+import { globalPrisma } from "@/libs/dbClient.js";
+import type { Message } from "@prisma/client";
 
 const messageRouter = new Hono();
 
@@ -143,8 +145,33 @@ messageRouter.post("/avatar/make-hiroin", async (c) => {
       return c.json({ error: "ユーザーIDが必要です" }, 401);
     }
 
+    // メッセージ一覧取得
+    const userTrainingMessages: Message[] = await globalPrisma.message.findMany(
+      {
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+      }
+    );
+    console.log("userTrainingMessages", userTrainingMessages);
+
+    const userTrainingMessagesContent: string = userTrainingMessages
+      .map(
+        (message) =>
+          `${
+            message.sender === "AI"
+              ? "斉藤 美咲（さいとう みさき）"
+              : "ユーザー"
+          }: ${message.content}`
+      )
+      .join("\n");
+
+    console.log("userTrainingMessagesContent", userTrainingMessagesContent);
+
     // 並行してAI応答と感情分析を実行
-    const misakiMessage = await ChatAiLogic.generateMisakiResponse([content]);
+    const misakiMessage = await ChatAiLogic.generateMisakiResponse(
+      [content],
+      userTrainingMessagesContent
+    );
 
     // 斉藤 美咲（さいとう みさき）からのメッセージを生成
     const response = {

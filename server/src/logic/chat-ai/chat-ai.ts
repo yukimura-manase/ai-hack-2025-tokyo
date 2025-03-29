@@ -56,10 +56,14 @@ export class ChatAiLogic {
    * @returns AI応答テキスト
    */
   public static async generateMisakiResponse(
-    content: string[]
+    content: string[],
+    userTrainingMessagesContent: string
   ): Promise<string> {
     try {
-      const systemPrompt: string = createMisakiStoryPrompt(content);
+      const systemPrompt: string = createMisakiStoryPrompt(
+        content,
+        userTrainingMessagesContent
+      );
 
       const promptTemplate: ChatPromptTemplate<any, any> =
         this.createPromptTemplate(systemPrompt);

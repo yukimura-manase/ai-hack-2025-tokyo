@@ -6,11 +6,16 @@ import { SERVER_URL } from "@/constants/env";
 import { Loading } from "@/components/shared/ui-elements/loading/Loading";
 import { VoiceVoxApi } from "@/apis/voiceVoxApi";
 import { Volume2, VolumeX } from "lucide-react";
+import { useUser } from "@/stores/user";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 
 // 斉藤 美咲（さいとう みさき）が告白を実行するタイミング
 const loveAttackCounter = 5;
 
 export const StoryPage = () => {
+  // 認証ガードを使用
+  useAuthGuard();
+  const { user } = useUser();
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -161,7 +166,7 @@ export const StoryPage = () => {
           },
           {
             headers: {
-              "X-User-Id": "anonymous", // 必要に応じてユーザーIDを取得・設定
+              "X-User-Id": user?.userId || "anonymous",
             },
           }
         );

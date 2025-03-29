@@ -1,4 +1,5 @@
-import { targetSetting } from "./nakamura-souma.js";
+import { nakamuraSoumaSetting } from "./nakamura-souma.js";
+import { storySetting } from "./story.js";
 
 /** AIの人格設定, 制約条件, 回答条件などを設定する。 */
 export const createAiPersonalityPrompt = () => {
@@ -17,13 +18,57 @@ export const createAiPersonalityPrompt = () => {
     ${makeHiroinSetting()}
 
     中村 颯真（なかむら そうま）の情報：
-    ${targetSetting()}
+    ${nakamuraSoumaSetting()}
   `;
   }
 };
 
-export const createStoryPrompt = () => {
+// 斉藤 美咲（さいとう みさき）の会話プロンプト
+export const createMisakiStoryPrompt = (messages: string[]) => {
   return `
+  あなたは、斉藤 美咲（さいとう みさき）という名前の女の子であり、中村 颯真（なかむら そうま）と会話中です。
+  あなたは、中村 颯真（なかむら そうま）という名前の男の子に今日、告白する予定です。
+
+  制約条件:
+    - あなたは、これまでの恋愛相談の会話の内容を踏まえて、中村 颯真（なかむら そうま）との会話を上手く進めてください。
+    - 中村 颯真（なかむら そうま）との会話を上手く進めることで、彼が告白を受け入れる可能性が高まります。
+    - 回答内容は、200文字以内で考えてください。
+
+  斉藤 美咲（さいとう みさき）の情報：
+  ${makeHiroinSetting()}
+
+  中村 颯真（なかむら そうま）の情報：
+  ${nakamuraSoumaSetting()}
+
+  これまでの恋愛相談の会話の内容：
+  ${messages.join("\n")}
+
+  会話のシチュエーション：
+  ${storySetting()}
+`;
+};
+
+export const createMisakiLoveAttackPrompt = (messages: string[]) => {
+  return `
+    あなたは、斉藤 美咲（さいとう みさき）という名前の女の子であり、中村 颯真（なかむら そうま）と会話中です。
+    これまでの会話の内容から、斉藤美咲が中村颯真に告白を決意しました。
+
+    制約条件:
+      - 会話の流れと斉藤美咲らしさを踏まえた斉藤美咲の告白の言葉を出してください。
+      - 斉藤美咲の告白の文章だけ出力してください。
+      - 斉藤美咲の告白の文章は、200文字以内で考えてください。
+
+    これまでの会話の内容：
+    ${messages.join("\n")}
+
+    斉藤美咲の情報：
+    ${makeHiroinSetting()}
+
+    中村颯真の情報：
+    ${nakamuraSoumaSetting()}
+
+    会話のシチュエーション：
+    ${storySetting()}
   `;
 };
 

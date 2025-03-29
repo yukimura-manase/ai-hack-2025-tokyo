@@ -119,3 +119,64 @@ export const createMessageAndAIResponse = async (
     throw error;
   }
 };
+
+/**
+ * アバターメッセージを保存する（斉藤美咲用）
+ * ユーザーメッセージとAI応答を保存する
+ * @param userId ユーザーID
+ * @param threadId スレッドID
+ * @param userContent ユーザーメッセージの内容
+ * @param aiContent AI応答メッセージの内容
+ * @returns [ユーザーメッセージ, AI応答メッセージ]
+ */
+export const createAvatarMessagePair = async (
+  userId: string,
+  threadId: string,
+  userContent: string,
+  aiContent: string
+) => {
+  try {
+    // スレッドの所有者確認
+    const thread = await globalPrisma.thread.findFirst({
+      where: {
+        threadId,
+        userId,
+      },
+    });
+
+    if (!thread) {
+      throw new Error("スレッドが見つかりません");
+    }
+
+    // ユーザーメッセージを保存
+    const userMessage: Message = await globalPrisma.message.create({
+      data: {
+        userId,
+        threadId,
+        sender: Sender.USER,
+        content: userContent,
+      },
+    });
+
+    // AI応答を保存
+    const aiMessage: Message = await globalPrisma.message.create({
+      data: {
+        userId,
+        threadId,
+        sender: Sender.AI,
+        content: aiContent,
+      },
+    });
+
+    // スレッドの更新日時を更新
+    await globalPrisma.thread.update({
+      where: { threadId },
+      data: { updatedAt: new Date() },
+    });
+
+    return [userMessage, aiMessage];
+  } catch (error) {
+    console.error("アバターメッセージの作成に失敗しました:", error);
+    throw error;
+  }
+};

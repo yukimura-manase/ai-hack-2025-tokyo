@@ -1,6 +1,10 @@
 import { Hono } from "hono";
-import { createMessageAndAIResponse } from "../../services/message.js";
+import {
+  createMessageAndAIResponse,
+  createAvatarMessagePair,
+} from "../../services/message.js";
 import { ChatAiLogic } from "../../logic/chat-ai/chat-ai.js";
+import { createThread } from "../../services/thread.js";
 
 const messageRouter = new Hono();
 
@@ -64,10 +68,28 @@ messageRouter.post("/avatar/chat", async (c) => {
   try {
     // リクエストボディからメッセージ内容を取得
     const body = await c.req.json();
-    const { content } = body;
+    const { content, threadId } = body;
 
     if (!content || typeof content !== "string") {
       return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 認証情報からユーザーIDを取得
+    const userId = c.req.header("X-User-Id");
+    if (!userId) {
+      return c.json({ error: "ユーザーIDが必要です" }, 401);
+    }
+
+    // スレッドIDがない場合は新しく作成
+    let actualThreadId = threadId;
+    if (!actualThreadId) {
+      try {
+        const thread = await createThread(userId, "斉藤 美咲との会話");
+        actualThreadId = thread.threadId;
+      } catch (error) {
+        console.error("スレッド作成エラー:", error);
+        return c.json({ error: "スレッドの作成に失敗しました" }, 500);
+      }
     }
 
     // 並行してAI応答と感情分析を実行
@@ -76,11 +98,25 @@ messageRouter.post("/avatar/chat", async (c) => {
       ChatAiLogic.analyzeEmotion(content),
     ]);
 
-    // フロントエンド用にレスポンス形式を整形
+    // メッセージをデータベースに保存
+    try {
+      await createAvatarMessagePair(
+        userId,
+        actualThreadId,
+        content,
+        aiResponse
+      );
+    } catch (error) {
+      console.error("メッセージ保存エラー:", error);
+      // メッセージ保存に失敗してもAPIレスポンスは返す（エラーログのみ）
+    }
+
+    // 斉藤 美咲（さいとう みさき）からのメッセージを生成
     const response = {
       text: aiResponse,
       emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
       timestamp: new Date(),
+      threadId: actualThreadId, // スレッドIDをレスポンスに含める
     };
 
     return c.json(response);
@@ -97,20 +133,22 @@ messageRouter.post("/avatar/make-hiroin", async (c) => {
     const body = await c.req.json();
     const { content } = body;
 
-    if (!content || typeof content !== "string") {
+    if (!content) {
       return c.json({ error: "メッセージ内容が必要です" }, 400);
     }
 
-    // 並行してAI応答と感情分析を実行
-    const [aiResponse, emotion] = await Promise.all([
-      ChatAiLogic.generateAIResponse(content),
-      ChatAiLogic.analyzeEmotion(content),
-    ]);
+    // 認証情報からユーザーIDを取得
+    const userId = c.req.header("X-User-Id");
+    if (!userId) {
+      return c.json({ error: "ユーザーIDが必要です" }, 401);
+    }
 
-    // フロントエンド用にレスポンス形式を整形
+    // 並行してAI応答と感情分析を実行
+    const misakiMessage = await ChatAiLogic.generateMisakiResponse([content]);
+
+    // 斉藤 美咲（さいとう みさき）からのメッセージを生成
     const response = {
-      text: aiResponse,
-      emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
+      text: misakiMessage,
       timestamp: new Date(),
     };
 
@@ -128,20 +166,85 @@ messageRouter.post("/avatar/make-sakuma", async (c) => {
     const body = await c.req.json();
     const { content } = body;
 
-    if (!content || typeof content !== "string") {
+    if (!content) {
       return c.json({ error: "メッセージ内容が必要です" }, 400);
     }
 
+    // 認証情報からユーザーIDを取得
+    const userId = c.req.header("X-User-Id");
+    if (!userId) {
+      return c.json({ error: "ユーザーIDが必要です" }, 401);
+    }
+
     // 並行してAI応答と感情分析を実行
-    const [aiResponse, emotion] = await Promise.all([
-      ChatAiLogic.generateAIResponse(content),
-      ChatAiLogic.analyzeEmotion(content),
+    const soumaMessage = await ChatAiLogic.generateSoumaResponse([content]);
+
+    // 中村 颯真（なかむら そうま）からのメッセージを生成
+    const response = {
+      text: soumaMessage,
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
+/** Story API Ver. 斉藤 美咲（さいとう みさき）からの告白メッセージ生成 */
+messageRouter.post("/avatar/make-hiroin/love-attack", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content) {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 認証情報からユーザーIDを取得
+    const userId = c.req.header("X-User-Id");
+    if (!userId) {
+      return c.json({ error: "ユーザーIDが必要です" }, 401);
+    }
+
+    // 並行してAI応答と感情分析を実行
+    const misakiMessage = await ChatAiLogic.generateMisakiLoveAttackResponse([
+      content,
     ]);
 
-    // フロントエンド用にレスポンス形式を整形
+    // 斉藤 美咲（さいとう みさき）からのメッセージを生成
     const response = {
-      text: aiResponse,
-      emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
+      text: misakiMessage,
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
+/** Story API Ver. 中村 颯真（なかむら そうま）の告白に対する判定 */
+messageRouter.post("/avatar/make-sakuma/last-judgment", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+
+    const { content } = body;
+
+    if (!content) {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    const judgment = await ChatAiLogic.generateSoumaLastJudgmentResponse([
+      content,
+    ]);
+
+    const response = {
+      text: judgment,
       timestamp: new Date(),
     };
 

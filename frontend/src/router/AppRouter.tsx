@@ -3,6 +3,7 @@ import LoginPage from "@/pages/login";
 import MyPage from "@/pages/my-page";
 import NotFoundPage from "@/pages/not-found";
 import SignUpPage from "@/pages/sign-up";
+import StoryPage from "@/pages/story";
 import TalkRoomPage from "@/pages/talk-room";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
@@ -29,6 +30,9 @@ export const AppRouter = () => {
         <Route path="/talk-room" element={<TalkRoomPage />} />
         {/* チャットルームページ Ver. スレッド選択状態 */}
         <Route path="/talk-room/:threadId" element={<TalkRoomPage />} />
+
+        {/* ストーリーページ */}
+        <Route path="/story" element={<StoryPage />} />
 
         {/* 404ページ - 存在しないパスに対応 */}
         <Route path="*" element={<NotFoundPage />} />

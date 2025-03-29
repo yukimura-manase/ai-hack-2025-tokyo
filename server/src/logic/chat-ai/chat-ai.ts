@@ -1,6 +1,7 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createAiPersonalityPrompt } from "../../constants/make-hiroin.js";
 
 export class ChatAiLogic {
   private constructor() {}
@@ -12,7 +13,7 @@ export class ChatAiLogic {
    */
   public static async generateAIResponse(content: string): Promise<string> {
     try {
-      const systemPrompt: string = this.createAiPersonalityPrompt();
+      const systemPrompt: string = createAiPersonalityPrompt();
 
       const promptTemplate: ChatPromptTemplate<any, any> =
         this.createPromptTemplate(systemPrompt);
@@ -38,6 +39,75 @@ export class ChatAiLogic {
     } catch (error) {
       console.error("AI応答の生成に失敗しました:", error);
       return "申し訳ありません、応答を生成できません";
+    }
+  }
+
+  /**
+   * ユーザーメッセージから感情を分析する
+   * @param content ユーザーメッセージの内容
+   * @returns 感情の種類（"neutral" | "happy" | "sad" | "surprised" | "angry"）
+   */
+  public static async analyzeEmotion(content: string): Promise<string> {
+    try {
+      const systemPrompt: string = `
+      あなたは、ユーザーメッセージから感情を分析するアシスタントです。
+      メッセージの内容を分析して、最も適切な感情カテゴリを返してください。
+      
+      感情カテゴリ:
+      - neutral：中立的、感情がない、または平常
+      - happy：嬉しい、幸せ、ポジティブ
+      - sad：悲しい、落ち込んでいる、ネガティブ
+      - surprised：驚き、意外、ショック
+      - angry：怒り、イライラ、不満
+      
+      制約条件:
+      - 必ず上記5つのカテゴリのうち1つだけを返してください
+      - カテゴリ名のみを返してください（説明は不要）
+      - 日本語での分析を行ってください
+      `;
+
+      const promptTemplate: ChatPromptTemplate<any, any> =
+        ChatPromptTemplate.fromMessages([
+          ["system", systemPrompt],
+          ["user", "以下のメッセージの感情を分析してください:\n{input}"],
+        ]);
+
+      /** Geminiのモデルを作成する。 */
+      const geminiModel: ChatGoogleGenerativeAI = new ChatGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        modelName: process.env.GEMINI_MODEL_NAME,
+        maxOutputTokens: 100,
+        temperature: 0.3,
+      });
+
+      /** 出力パーサーを作成する。 */
+      const outputParser = new StringOutputParser();
+
+      /** チェーンを作成する。 */
+      const llmChain = promptTemplate.pipe(geminiModel).pipe(outputParser);
+
+      const emotion: string = await llmChain.invoke({
+        input: content,
+      });
+
+      // 余分な空白や改行を削除して結果を正規化
+      const normalizedEmotion = emotion.trim().toLowerCase();
+
+      // 有効な感情カテゴリに含まれているか確認
+      const validEmotions = ["neutral", "happy", "sad", "surprised", "angry"];
+
+      if (validEmotions.includes(normalizedEmotion)) {
+        return normalizedEmotion;
+      } else {
+        // 有効でない場合はデフォルトとしてneutralを返す
+        console.warn(
+          `無効な感情カテゴリ "${normalizedEmotion}" が検出されました。`
+        );
+        return "neutral";
+      }
+    } catch (error) {
+      console.error("感情分析に失敗しました:", error);
+      return "neutral"; // エラー時はデフォルトとしてneutralを返す
     }
   }
 
@@ -98,19 +168,6 @@ export class ChatAiLogic {
     } catch (error) {
       console.error("スレッドタイトル生成に失敗しました:", error);
       return "新しい会話";
-    }
-  }
-
-  /** AIの人格設定, 制約条件, 回答条件などを設定する。 */
-  private static createAiPersonalityPrompt(): string {
-    {
-      return `
-    あなたは、ユーザーからの相談に乗るChatBotです。
-    また、あなたは、以下の制約条件と回答条件を厳密に守る必要があります。
-
-    制約条件:
-      - あなたは、ユーザーからの相談に適切に回答する必要があります。
-    `;
     }
   }
 

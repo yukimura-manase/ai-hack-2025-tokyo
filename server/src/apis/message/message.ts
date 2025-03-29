@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { createMessageAndAIResponse } from "../../services/message.js";
+import { ChatAiLogic } from "../../logic/chat-ai/chat-ai.js";
 
 const messageRouter = new Hono();
 
@@ -55,6 +56,99 @@ messageRouter.post("/:threadId", async (c) => {
       return c.json({ error: "スレッドが見つかりません" }, 404);
     }
     return c.json({ error: "メッセージの作成に失敗しました" }, 500);
+  }
+});
+
+/** アバター会話API - 感情分析とAI応答の生成 */
+messageRouter.post("/avatar/chat", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content || typeof content !== "string") {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 並行してAI応答と感情分析を実行
+    const [aiResponse, emotion] = await Promise.all([
+      ChatAiLogic.generateAIResponse(content),
+      ChatAiLogic.analyzeEmotion(content),
+    ]);
+
+    // フロントエンド用にレスポンス形式を整形
+    const response = {
+      text: aiResponse,
+      emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
+/** Story API Ver. 斉藤 美咲（さいとう みさき）からのメッセージを生成 */
+messageRouter.post("/avatar/make-hiroin", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content || typeof content !== "string") {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 並行してAI応答と感情分析を実行
+    const [aiResponse, emotion] = await Promise.all([
+      ChatAiLogic.generateAIResponse(content),
+      ChatAiLogic.analyzeEmotion(content),
+    ]);
+
+    // フロントエンド用にレスポンス形式を整形
+    const response = {
+      text: aiResponse,
+      emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
+/** Story API Ver. 中村 颯真（なかむら そうま）からのメッセージを生成 */
+messageRouter.post("/avatar/make-sakuma", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content || typeof content !== "string") {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 並行してAI応答と感情分析を実行
+    const [aiResponse, emotion] = await Promise.all([
+      ChatAiLogic.generateAIResponse(content),
+      ChatAiLogic.analyzeEmotion(content),
+    ]);
+
+    // フロントエンド用にレスポンス形式を整形
+    const response = {
+      text: aiResponse,
+      emotion: emotion as "neutral" | "happy" | "sad" | "surprised" | "angry",
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
   }
 });
 

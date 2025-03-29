@@ -3,9 +3,13 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import {
   createAiPersonalityPrompt,
+  createMisakiLoveAttackPrompt,
   createMisakiStoryPrompt,
 } from "../../constants/make-hiroin.js";
-import { createSoumaStoryPrompt } from "@/constants/nakamura-souma.js";
+import {
+  createSoumaLastJudgmentPrompt,
+  createSoumaStoryPrompt,
+} from "@/constants/nakamura-souma.js";
 
 export class ChatAiLogic {
   private constructor() {}
@@ -94,6 +98,82 @@ export class ChatAiLogic {
   ): Promise<string> {
     try {
       const systemPrompt: string = createSoumaStoryPrompt(content);
+
+      const promptTemplate: ChatPromptTemplate<any, any> =
+        this.createPromptTemplate(systemPrompt);
+
+      /** Geminiのモデルを作成する。 */
+      const geminiModel: ChatGoogleGenerativeAI = new ChatGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        modelName: process.env.GEMINI_MODEL_NAME,
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      });
+
+      /** 出力パーサーを作成する。 */
+      const outputParser = new StringOutputParser();
+
+      /** チェーンを作成する。 */
+      const llmChain = promptTemplate.pipe(geminiModel).pipe(outputParser);
+
+      const aiAnswer: string = await llmChain.invoke({
+        input: content,
+      });
+      return aiAnswer;
+    } catch (error) {
+      console.error("AI応答の生成に失敗しました:", error);
+      return "申し訳ありません、応答を生成できません";
+    }
+  }
+
+  /**
+   * 斉藤 美咲（さいとう みさき）が告白する。
+   * @param content ユーザーメッセージの内容
+   * @returns AI応答テキスト
+   */
+  public static async generateMisakiLoveAttackResponse(
+    content: string[]
+  ): Promise<string> {
+    try {
+      const systemPrompt: string = createMisakiLoveAttackPrompt(content);
+
+      const promptTemplate: ChatPromptTemplate<any, any> =
+        this.createPromptTemplate(systemPrompt);
+
+      /** Geminiのモデルを作成する。 */
+      const geminiModel: ChatGoogleGenerativeAI = new ChatGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        modelName: process.env.GEMINI_MODEL_NAME,
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      });
+
+      /** 出力パーサーを作成する。 */
+      const outputParser = new StringOutputParser();
+
+      /** チェーンを作成する。 */
+      const llmChain = promptTemplate.pipe(geminiModel).pipe(outputParser);
+
+      const aiAnswer: string = await llmChain.invoke({
+        input: content,
+      });
+      return aiAnswer;
+    } catch (error) {
+      console.error("AI応答の生成に失敗しました:", error);
+      return "申し訳ありません、応答を生成できません";
+    }
+  }
+
+  /**
+   * 中村 颯真（なかむら そうま）からの告白の判定を生成する。
+   * @param content ユーザーメッセージの内容
+   * @returns AI応答テキスト
+   */
+  public static async generateSoumaLastJudgmentResponse(
+    content: string[]
+  ): Promise<string> {
+    try {
+      const systemPrompt: string = createSoumaLastJudgmentPrompt(content);
 
       const promptTemplate: ChatPromptTemplate<any, any> =
         this.createPromptTemplate(systemPrompt);

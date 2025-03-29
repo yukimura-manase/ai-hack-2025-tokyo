@@ -192,4 +192,67 @@ messageRouter.post("/avatar/make-sakuma", async (c) => {
   }
 });
 
+/** Story API Ver. 斉藤 美咲（さいとう みさき）からの告白メッセージ生成 */
+messageRouter.post("/avatar/make-hiroin/love-attack", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content) {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    // 認証情報からユーザーIDを取得
+    const userId = c.req.header("X-User-Id");
+    if (!userId) {
+      return c.json({ error: "ユーザーIDが必要です" }, 401);
+    }
+
+    // 並行してAI応答と感情分析を実行
+    const misakiMessage = await ChatAiLogic.generateMisakiLoveAttackResponse([
+      content,
+    ]);
+
+    // 斉藤 美咲（さいとう みさき）からのメッセージを生成
+    const response = {
+      text: misakiMessage,
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
+/** Story API Ver. 中村 颯真（なかむら そうま）の告白に対する判定 */
+messageRouter.post("/avatar/make-sakuma/last-judgment", async (c) => {
+  try {
+    // リクエストボディからメッセージ内容を取得
+    const body = await c.req.json();
+
+    const { content } = body;
+
+    if (!content) {
+      return c.json({ error: "メッセージ内容が必要です" }, 400);
+    }
+
+    const judgment = await ChatAiLogic.generateSoumaLastJudgmentResponse([
+      content,
+    ]);
+
+    const response = {
+      text: judgment,
+      timestamp: new Date(),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    console.error("アバター会話APIエラー:", error);
+    return c.json({ error: "AI応答の生成に失敗しました" }, 500);
+  }
+});
+
 export default messageRouter;

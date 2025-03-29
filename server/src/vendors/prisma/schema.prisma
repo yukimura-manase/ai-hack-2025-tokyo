@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* User Entity: ユーザーの基本情報を管理するエンティティ。*/
+model User {
+  userId   String   @id @default(uuid(7)) // UUID v7を指定する。
+  email     String   @unique
+  name      String
+  companyName String // 会社名
+  affiliation String? // 所属
+  position String? // 役職
+  googleId String? // Google認証ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  // Relation関係
+  threads Thread[] // User:Thread = 1:N の関係を持つ。
+  messages  Message[] // User:Message = 1:N の関係を持つ。
+}
+
+
+/* Thread Entity: Messageのグループ。*/
+model Thread {
+  threadId String @id @default(uuid(7)) // UUID v7を指定する。
+  userId String // スレッドの作成者を特定するための外部キー
+  title String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  // Relation関係
+  messages Message[] // Thread:Message = 1:N の関係を持つ。
+  user User @relation(fields: [userId], references: [userId]) // User:Thread = 1:N の関係を持つ。
+}
+
+/* メッセージの送信者を特定するための列挙型。*/
+enum Sender {
+  USER
+  AI
+}
+
+/* Message Entity: ユーザーの基本情報を管理するエンティティ。*/
+model Message {
+  messageId String @id @default(uuid(7)) // UUID v7を指定する。
+  userId    String // ユーザーを特定するための外部キー
+  threadId  String // メッセージのスレッドを特定するための外部キー
+  sender    Sender // メッセージの送信者タイプ
+  content   String // メッセージの内容
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  // Relation関係
+  user User @relation(fields: [userId], references: [userId]) // User:Message = 1:N の関係を持つ。
+  thread Thread @relation(fields: [threadId], references: [threadId]) // Thread:Message = 1:N の関係を持つ。
+}

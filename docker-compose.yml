@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  # DB設定
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGPASSWORD: password
+      POSTGRES_DB: testdb
+      DATABASE_HOST: localhost
+    # ポートフォワーディング
+    ports:
+      # ホストマシン:コンテナ
+      - "8787:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

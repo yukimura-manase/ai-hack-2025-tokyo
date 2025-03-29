@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+
+    // Path alias 設定
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@chemical-data-search-ai-agent/shared": ["../shared/src"]
+    },
+
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  }
+}

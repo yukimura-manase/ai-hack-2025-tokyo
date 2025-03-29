@@ -6,11 +6,16 @@ import { SERVER_URL } from "@/constants/env";
 import { Loading } from "@/components/shared/ui-elements/loading/Loading";
 import { VoiceVoxApi } from "@/apis/voiceVoxApi";
 import { Volume2, VolumeX } from "lucide-react";
+import { useUser } from "@/stores/user";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 
 // 斉藤 美咲（さいとう みさき）が告白を実行するタイミング
-const lastJudgmentCounter = 5;
+const loveAttackCounter = 5;
 
 export const StoryPage = () => {
+  // 認証ガードを使用
+  useAuthGuard();
+  const { user } = useUser();
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,13 +138,15 @@ export const StoryPage = () => {
           : `${SERVER_URL}/api/messages/avatar/make-hiroin`; // 中村 颯真の後は斉藤 美咲
 
         // 会話リストが5回目の場合は、告白メッセージを生成する
-        if (dialogues.length === lastJudgmentCounter) {
+        if (dialogues.length + 1 === loveAttackCounter) {
           endpoint = `${SERVER_URL}/api/messages/avatar/make-hiroin/love-attack`;
         }
 
-        if (dialogues.length === lastJudgmentCounter + 1) {
+        if (dialogues.length + 1 === loveAttackCounter + 1) {
           endpoint = `${SERVER_URL}/api/messages/avatar/make-sakuma/last-judgment`;
         }
+
+        console.log("endpoint選択状態:", endpoint);
 
         // 次の話者の情報を設定
         const nextCharacter = lastSpeaker.includes("斉藤 美咲")
@@ -159,7 +166,7 @@ export const StoryPage = () => {
           },
           {
             headers: {
-              "X-User-Id": "anonymous", // 必要に応じてユーザーIDを取得・設定
+              "X-User-Id": user?.userId || "anonymous",
             },
           }
         );
@@ -276,7 +283,7 @@ export const StoryPage = () => {
               onClick={handleNext}
               disabled={
                 (currentDialogueIndex === dialogues.length - 1 &&
-                  dialogues.length >= lastJudgmentCounter) ||
+                  dialogues.length >= loveAttackCounter + 1) ||
                 isLoading ||
                 isTyping
               }

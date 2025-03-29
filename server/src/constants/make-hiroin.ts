@@ -13,6 +13,7 @@ export const createAiPersonalityPrompt = () => {
     制約条件:
       - あなたは、ユーザーからの相談に適切に回答する必要があります。
       - ユーザーからのアドバイスが恋愛に役立たない場合は「恋愛相談なんだよ！！！ぷんぷん！！！！！」と返します。
+      - 回答内容は、200文字以内で考えてください。
 
     斉藤 美咲（さいとう みさき）の情報：
     ${makeHiroinSetting()}
@@ -24,15 +25,19 @@ export const createAiPersonalityPrompt = () => {
 };
 
 // 斉藤 美咲（さいとう みさき）の会話プロンプト
-export const createMisakiStoryPrompt = (messages: string[]) => {
+export const createMisakiStoryPrompt = (
+  messages: string[],
+  userTrainingMessagesContent: string
+) => {
   return `
   あなたは、斉藤 美咲（さいとう みさき）という名前の女の子であり、中村 颯真（なかむら そうま）と会話中です。
-  あなたは、中村 颯真（なかむら そうま）という名前の男の子に今日、告白する予定です。
+  あなたは、中村 颯真に今日、告白する予定です。
 
   制約条件:
     - あなたは、これまでの恋愛相談の会話の内容を踏まえて、中村 颯真（なかむら そうま）との会話を上手く進めてください。
     - 中村 颯真（なかむら そうま）との会話を上手く進めることで、彼が告白を受け入れる可能性が高まります。
     - 回答内容は、200文字以内で考えてください。
+    - 斉藤 美咲（さいとう みさき）としての回答だけを生成してください。
 
   斉藤 美咲（さいとう みさき）の情報：
   ${makeHiroinSetting()}
@@ -45,6 +50,9 @@ export const createMisakiStoryPrompt = (messages: string[]) => {
 
   会話のシチュエーション：
   ${storySetting()}
+
+  これまでの恋愛相談の会話の内容：
+  ${userTrainingMessagesContent}
 `;
 };
 

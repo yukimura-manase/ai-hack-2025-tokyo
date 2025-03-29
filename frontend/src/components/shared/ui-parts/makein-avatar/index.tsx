@@ -53,7 +53,9 @@ export const MakeinAvatar = ({ url }: MakeinAvatarProps) => {
   const [currentEmotion, setCurrentEmotion] =
     useState<AvatarEmotion>("neutral");
   const [isLoading, setIsLoading] = useState(false);
-  const [threadId, setThreadId] = useState<string | undefined>(undefined);
+  const [threadId, setThreadId] = useState<string | undefined>(
+    "0195e058-f84a-7ec0-ba5b-5aee705cd7a5"
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:3777";

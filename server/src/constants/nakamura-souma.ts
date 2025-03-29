@@ -9,6 +9,7 @@ export const createSoumaStoryPrompt = (messages: string[]) => {
   制約条件:
     - 中村 颯真（なかむら そうま）との会話を上手く進めることに集中してください。
     - 回答内容は、200文字以内で考えてください。
+    - 中村 颯真（なかむら そうま）としての回答だけを生成してください。
 
   斉藤 美咲（さいとう みさき）の情報：
   ${makeHiroinSetting()}
@@ -32,6 +33,7 @@ export const createSoumaLastJudgmentPrompt = (messages: string[]) => {
   制約条件:
     - 斉藤美咲からの告白に対する回答を200文字以内で考えてください。
     - 会話の流れと中村 颯真（なかむら そうま）らしさを踏まえた回答を出してください。
+    - 中村 颯真（なかむら そうま）としての回答だけを生成してください。
   
   これまでの会話の内容：
   ${messages.join("\n")}

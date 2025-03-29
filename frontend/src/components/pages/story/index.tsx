@@ -141,6 +141,8 @@ export const StoryPage = () => {
           endpoint = `${SERVER_URL}/api/messages/avatar/make-sakuma/last-judgment`;
         }
 
+        console.log("endpoint選択状態:", endpoint);
+
         // 次の話者の情報を設定
         const nextCharacter = lastSpeaker.includes("斉藤 美咲")
           ? "中村 颯真（なかむら そうま）"

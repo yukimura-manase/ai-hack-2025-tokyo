@@ -8,7 +8,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-2 cursor-pointer">
           <h1 className="text-2xl font-bold text-center">
-            負けイン育成計画❤️❤️❤️！！！！！
+            負けヒロイン(友達止まり)育成計画❤️❤️❤️！！！！！
           </h1>
         </div>
       </div>

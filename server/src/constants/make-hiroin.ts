@@ -45,7 +45,7 @@ export const createMisakiStoryPrompt = (
   中村 颯真（なかむら そうま）の情報：
   ${nakamuraSoumaSetting()}
 
-  これまでの恋愛相談の会話の内容：
+  これまでの2人の会話内容:
   ${messages.join("\n")}
 
   会話のシチュエーション：

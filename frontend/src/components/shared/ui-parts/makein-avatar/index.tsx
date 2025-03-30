@@ -427,6 +427,11 @@ export const Model: FC<ModelProps> = ({ currentEmotion, url }) => {
               {getEmotionLabel(currentEmotion)}
             </div>
           </Html>
+          <Html position={[-0.5, 1, 0]}>
+            <div className="bg-white/80 w-[200px] px-3 py-1 rounded-md shadow-md text-xs text-gray-700">
+              モデル：『無料アバター ARO』/作: Bburichu (VRoid Hub)
+            </div>
+          </Html>
         </>
       ) : (
         <Html center>{progress} % loaded</Html>

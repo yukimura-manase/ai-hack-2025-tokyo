@@ -11,7 +11,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@chemical-data-search-ai-agent/shared": ["../shared/src"]
+      "@chemical-data-search-ai-agent/shared": ["../shared/src"],
+      "three/examples/jsm/*": ["./node_modules/three/examples/jsm/*"]
     },
 
     /* Bundler mode */
